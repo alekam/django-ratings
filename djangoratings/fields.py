@@ -43,6 +43,12 @@ class RatingManager(object):
         self.votes_field_name = "%s_votes" % (self.field.name,)
         self.score_field_name = "%s_score" % (self.field.name,)
 
+    def __str__(self):
+        return self.get_rating()
+
+    def __unicode__(self):
+        return self.get_rating()
+
     def get_percent(self):
         """get_percent()
 

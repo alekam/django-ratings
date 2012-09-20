@@ -46,7 +46,7 @@ to obtain a higher rating, you can use the ``weight`` kwarg::
 
 ``RatingField`` allows the following options:
 
-* ``range = 2`` - The range in which values are accepted. For example, a range of 2, says there are 2 possible vote scores.
+* ``range = 2`` - The range in which values are accepted. For example, a range of 2, says there are 2 possible vote scores. You can provide full list of allowed values. There is list [1, 2] instead of 2 in this case.
 * ``can_change_vote = False`` - Allow the modification of votes that have already been made.
 * ``allow_delete = False`` - Allow the deletion of existent votes. Works only if ``can_change_vote = True``
 * ``allow_anonymous = False`` - Whether to allow anonymous votes.
@@ -146,11 +146,24 @@ And this COOKIE lives in user's browser for 1 year (this period is also fixed fo
 *This feature may change in the future*
 
 ==========================
-Limit Votes Per IP Address
+Settings
 ==========================
+
+--------------------------
+Limit Votes Per IP Address
+--------------------------
+
 *New in 0.3.5*: There is now a setting, ``RATINGS_VOTES_PER_IP``, to limit the number of unique IPs per object/rating-field combination. This is useful if you have issues with users registering multiple accounts to vote on a single object::
 
 	RATINGS_VOTES_PER_IP = 3
+
+---------------------------
+Link with custom user model
+---------------------------
+
+If you use custom model inherited from ``django.contrib.auth.models.User``, you can set up ratings relation to it with ``RATINGS_USER_MODEL``.  
+
+	RATINGS_USER_MODEL = 'user.MyUser'
 
 =============
 Template Tags
