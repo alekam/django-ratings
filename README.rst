@@ -50,7 +50,8 @@ to obtain a higher rating, you can use the ``weight`` kwarg::
 * ``can_change_vote = False`` - Allow the modification of votes that have already been made.
 * ``allow_delete = False`` - Allow the deletion of existent votes. Works only if ``can_change_vote = True``
 * ``allow_anonymous = False`` - Whether to allow anonymous votes.
-* ``use_cookies = False`` - Use COOKIES to authenticate user votes. Works only if ``allow_anonymous = True``. 
+* ``use_cookies = False`` - Use COOKIES to authenticate user votes. Works only if ``allow_anonymous = True``.
+* ``formula`` - Change default rating calculation formula to your own. Must be callable. It returns rating value and takes three keywords arguments: score, votes, weight. See ``RATINGS_DEFAULT_FORMULA`` settings option for more details.
 
 ===================
 Using the model API
@@ -164,6 +165,23 @@ Link with custom user model
 If you use custom model inherited from ``django.contrib.auth.models.User``, you can set up ratings relation to it with ``RATINGS_USER_MODEL``.  
 
 	RATINGS_USER_MODEL = 'user.MyUser'
+
+-----------------------------------------
+Change default rating calculation formula
+-----------------------------------------
+
+If you need your own rating calculation algorithm, you can use ``formula`` keyword in rating form field definition. If you need use many rating fields in different parts of your code, you can change default rating calculation formula with ``RATINGS_DEFAULT_FORMULA`` settings. It must contains callable returns actual rating value. See implementation of rating calculator used by default::
+
+	def rating_formula(score, votes, weight):
+	    """
+	    Default rating formula
+	    """
+	    if not (votes and score):
+	        return 0
+	    return float(score) / (votes + weight)
+	
+	RATINGS_DEFAULT_FORMULA = rating_formula
+
 
 =============
 Template Tags

@@ -6,7 +6,7 @@ import itertools
 from datetime import datetime
 
 from models import Vote, Score
-from default_settings import RATINGS_VOTES_PER_IP
+from default_settings import RATINGS_VOTES_PER_IP, RATINGS_DEFAULT_FORMULA
 from exceptions import *
 
 if 'django.contrib.contenttypes' not in settings.INSTALLED_APPS:
@@ -34,6 +34,7 @@ class Rating(object):
         self.score = score
         self.votes = votes
 
+
 class RatingManager(object):
     def __init__(self, instance, field):
         self.content_type = None
@@ -44,10 +45,10 @@ class RatingManager(object):
         self.score_field_name = "%s_score" % (self.field.name,)
 
     def __str__(self):
-        return self.get_rating()
+        return "%d" % self.get_rating()
 
     def __unicode__(self):
-        return self.get_rating()
+        return unicode(self.get_rating())
 
     def get_percent(self):
         """get_percent()
@@ -75,9 +76,8 @@ class RatingManager(object):
         """get_rating()
 
         Returns the weighted average rating."""
-        if not (self.votes and self.score):
-            return 0
-        return float(self.score) / (self.votes + self.field.weight)
+        return self.field.rating_calculator(self.score, self.votes,
+                                            self.field.weight)
 
     def get_opinion_percent(self):
         """get_opinion_percent()
@@ -140,15 +140,15 @@ class RatingManager(object):
         try:
             score = int(score)
         except (ValueError, TypeError):
-            raise InvalidRating("%s is not a valid choice for %s" % (score, self.field.name))
+            raise InvalidRating("%s is not a valid choice for %s, type missmatch" % (score, self.field.name))
 
         delete = (score == 0)
         if delete and not self.field.allow_delete:
             raise CannotDeleteVote("you are not allowed to delete votes for %s" % (self.field.name,))
             # ... you're also can't delete your vote if you haven't permissions to change it. I leave this case for CannotChangeVote
 
-        if self.field.check_range(score):
-            raise InvalidRating("%s is not a valid choice for %s" % (score, self.field.name))
+        if not self.field.check_range(score):
+            raise InvalidRating("%s is not a valid choice for %s, score not in range" % (score, self.field.name))
 
         is_anonymous = (user is None or not user.is_authenticated())
         if is_anonymous and not self.field.allow_anonymous:
@@ -340,6 +340,7 @@ class RatingField(IntegerField):
         self.allow_anonymous = kwargs.pop('allow_anonymous', False)
         self.use_cookies = kwargs.pop('use_cookies', False)
         self.allow_delete = kwargs.pop('allow_delete', False)
+        self.rating_calculator = kwargs.pop('formula', RATINGS_DEFAULT_FORMULA)
         kwargs['editable'] = False
         kwargs['default'] = 0
         kwargs['blank'] = True
